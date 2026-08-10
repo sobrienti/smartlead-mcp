@@ -2,6 +2,7 @@
 
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { getSmartleadConfig } from "./api.js";
 
 import { addEmailAccountSchema, addEmailAccount } from "./tools/add-email-account.js";
 import { listEmailAccountsSchema, listEmailAccounts } from "./tools/list-email-accounts.js";
@@ -47,7 +48,7 @@ const tool = (name: string, desc: string, schema: any, handler: any) =>
     return { content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }] };
   });
 
-tool("add-email-account", "Add a new email sending account with SMTP/IMAP credentials (defaults to Gmail settings)", addEmailAccountSchema, addEmailAccount);
+tool("add-email-account", "Add a new email sending account with provider-specific SMTP/IMAP credentials", addEmailAccountSchema, addEmailAccount);
 tool("list-email-accounts", "List all email sending accounts", listEmailAccountsSchema, listEmailAccounts);
 tool("get-email-account", "Get details of a specific email account", getEmailAccountSchema, getEmailAccount);
 tool("update-email-account", "Update an email account's settings", updateEmailAccountSchema, updateEmailAccount);
@@ -77,6 +78,9 @@ tool("get-campaign-statistics", "Get detailed statistics for a campaign", getCam
 tool("get-analytics-overview", "Get global analytics overview across all campaigns", getAnalyticsOverviewSchema, getAnalyticsOverview);
 
 async function main() {
+  // Fail at startup with a clear configuration error instead of waiting for
+  // the first tool call to discover that credentials are missing.
+  getSmartleadConfig();
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("Smartlead MCP server running on stdio");
